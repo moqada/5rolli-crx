@@ -1,0 +1,20 @@
+{
+  "manifest_version": 2,
+  "name": "5ROLLI",
+  "description": "5ROLLI on Trello",
+  "version": "0.0.0",
+  "icons": {
+      "16": "img/icon@16.png",
+      "48": "img/icon@48.png",
+      "128": "img/icon@128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://trello.com/*"
+      ],
+      "js": ["content.js"],
+      "css": ["styles/content.css"]
+    }
+  ]
+}

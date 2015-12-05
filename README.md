@@ -7,7 +7,7 @@
 [![Release][release-image]][release-url]
 [![License][license-image]][license-url]
 
-Chrome Extension for 5ROLLI
+Chrome Extension for [5ROLLI](https://github.com/tongariboyz/5rolli/).
 
 ## Preview 
 

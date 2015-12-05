@@ -52,7 +52,7 @@
     "build:copy": "cpx 'src/**/*.{json,png}' app/",
     "build:css-content": "stylus src/styles/content.styl -o app/styles/content.css",
     "build:js-content": "browserify -t babelify src/content/index.js -o app/content.js",
-    "pack": "crx app -o build/5rolli.crx",
+    "pack": "crx pack app -o build/5rolli.crx -p key.pem",
     "codecov": "cat coverage/lcov.info | codecov",
     "deploy": "npm-run-all doc gh-pages",
     "doc": "esdoc -c esdoc.json",

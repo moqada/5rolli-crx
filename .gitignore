@@ -3,6 +3,8 @@ npm-debug.log
 
 .eslintcache
 app/
+build/
 coverage/
 doc/
 node_modules/
+key.pem

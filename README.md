@@ -16,7 +16,7 @@ Chrome Extension for 5ROLLI
 
 ## Installation
 
-1. Downloads Latst Release file from [GitHub Releases](https://github.com/moqada/5rolli-crx/releases)
+1. Downloads latest release file from [GitHub Releases](https://github.com/moqada/5rolli-crx/releases)
 2. Open Google Chrome
 3. Drop `5rolli.crx` to `chrome://extensions`.
 

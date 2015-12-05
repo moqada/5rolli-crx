@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../../">
+  <title data-ice="title">src/content/TimeSummaryManager.js | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  <a href="test.html" data-ice="testLink">Test</a>
+  <a data-ice="repoURL" href="https://github.com/moqada/5rolli-crx.git" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><div data-ice="dirPath" class="nav-dir-path">content</div><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/content/TimeSummaryManager.js~TimeSummaryManager.html">TimeSummaryManager</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-createTime">createTime</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-typedef">T</span><span data-ice="name"><span><a href="typedef/index.html#static-typedef-TimeSummary">TimeSummary</a></span></span></li>
+<li data-ice="doc"><div data-ice="dirPath" class="nav-dir-path">content/components</div><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-TimeSummaryLabel">TimeSummaryLabel</a></span></span></li>
+<li data-ice="doc"><div data-ice="dirPath" class="nav-dir-path">content/lib</div><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/content/lib/Renderer.js~Renderer.html">Renderer</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-typedef">T</span><span data-ice="name"><span><a href="typedef/index.html#static-typedef-RenderItem">RenderItem</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">src/content/TimeSummaryManager.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">import summarizer from &apos;5rolli-time-summarizer&apos;;
+import TimeSummaryLabel from &apos;./components/TimeSummaryLabel&apos;;
+import Renderer from &apos;./lib/Renderer&apos;;
+import {createTime} from &apos;./helpers&apos;;
+
+/**
+ * @typedef {Object} TimeSummary
+ *
+ * @property {number} es estimated minutes
+ * @property {number} es50 50% estimated minutes
+ * @property {number} es90 90% estimated minutes
+ * @property {number} spent spent minutes
+ */
+
+
+/**
+ * Managemnet TimeSummary on Trello Web Site
+ */
+export default class TimeSummaryManager {
+  /**
+   * Constructor
+   *
+   * @param {DOMNode} targetDOM target DOM for observing
+   */
+  constructor(targetDOM) {
+    this.target = targetDOM;
+    this.renderer = new Renderer(TimeSummaryLabel);
+    this.observer = new MutationObserver(mutations =&gt; {
+      mutations.every(mutation =&gt; {
+        const {target, addedNodes, removedNodes} = mutation;
+        const added = addedNodes.length ? addedNodes[0].classList : null;
+        const removed = removedNodes.length ? removedNodes[0].classList : null;
+        const hasChange = (
+          target.classList.contains(&apos;list-card-title&apos;)
+          || added &amp;&amp; added.contains(&apos;list-card&apos;)
+          || removed &amp;&amp; removed.contains(&apos;list-card&apos;)
+        );
+        if (hasChange) {
+          this.refresh();
+          return false;
+        }
+        return true;
+      });
+    });
+  }
+
+  /**
+   * Start Observe Trello and attach TimeSummary labels
+   */
+  start() {
+    this.refresh();
+    this.observer.observe(this.target, {childList: true, subtree: true});
+  }
+
+  /**
+   * Refresh all TimeSummary labels
+   */
+  refresh() {
+    const renderItems = this.getTimeSummaries();
+    this.renderer.render(renderItems);
+  }
+
+  /**
+   * Return TimeSummary and DOMNode per Trello List
+   *
+   * @return {{node: DOMNode, props: {timeSummary: TimeSummary}}}
+   */
+  getTimeSummaries() {
+    const listNodes = this.target.querySelectorAll(&apos;.list-wrapper &gt; .list&apos;);
+    return Array.prototype.map.call(listNodes, listNode =&gt; {
+      const titleNodes = listNode.querySelectorAll(&apos;.list-card-title&apos;);
+      const times = Array.prototype.map.call(titleNodes, title =&gt; {
+        if (title.offsetParent) {
+          return createTime(title.text);
+        }
+        return null;
+      }).filter(t =&gt; t);
+      const timeSummary = summarizer(times);
+      return {
+        node: listNode.querySelector(&apos;.list-header&apos;),
+        props: {timeSummary}
+      };
+    });
+  }
+}
+</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.4.3)</span></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

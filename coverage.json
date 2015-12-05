@@ -1,0 +1,34 @@
+{
+  "coverage": "68.75%",
+  "expectCount": 16,
+  "actualCount": 11,
+  "files": {
+    "src/content/lib/Renderer.js": {
+      "expectCount": 6,
+      "actualCount": 4,
+      "undocumentLines": [
+        24,
+        23
+      ]
+    },
+    "src/content/components/TimeSummaryLabel.js": {
+      "expectCount": 1,
+      "actualCount": 1,
+      "undocumentLines": []
+    },
+    "src/content/TimeSummaryManager.js": {
+      "expectCount": 8,
+      "actualCount": 5,
+      "undocumentLines": [
+        28,
+        27,
+        26
+      ]
+    },
+    "src/content/helpers.js": {
+      "expectCount": 1,
+      "actualCount": 1,
+      "undocumentLines": []
+    }
+  }
+}

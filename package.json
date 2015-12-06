@@ -36,13 +36,8 @@
     "stylus": "^0.52.4",
     "watchify": "^3.6.1"
   },
-  "files": [
-    "lib"
-  ],
   "homepage": "https://github.com/moqada/5rolli-crx#readme",
-  "keywords": [],
   "license": "MIT",
-  "main": "lib/index.js",
   "private": true,
   "repository": {
     "type": "git",

@@ -3,6 +3,8 @@ import TimeSummaryLabel from './components/TimeSummaryLabel';
 import Renderer from './lib/Renderer';
 import {createTime} from './helpers';
 
+const REFRESH_DURATION = 200;
+
 /**
  * @typedef {Object} TimeSummary
  *
@@ -72,7 +74,7 @@ export default class TimeSummaryManager {
         const renderItems = this.getTimeSummaries();
         this.renderer.render(renderItems);
         this.refreshTimeoutId = null;
-      }, 200);
+      }, REFRESH_DURATION);
     }
   }
 

@@ -10,10 +10,31 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "import summarizer from '5rolli-time-summarizer';\nimport TimeSummaryLabel from './components/TimeSummaryLabel';\nimport Renderer from './lib/Renderer';\nimport {createTime} from './helpers';\n\n/**\n * @typedef {Object} TimeSummary\n *\n * @property {number} es estimated minutes\n * @property {number} es50 50% estimated minutes\n * @property {number} es90 90% estimated minutes\n * @property {number} spent spent minutes\n */\n\n\n/**\n * Managemnet TimeSummary on Trello Web Site\n */\nexport default class TimeSummaryManager {\n  /**\n   * Constructor\n   *\n   * @param {DOMNode} targetDOM target DOM for observing\n   */\n  constructor(targetDOM) {\n    this.target = targetDOM;\n    this.renderer = new Renderer(TimeSummaryLabel);\n    this.observer = new MutationObserver(mutations => {\n      mutations.every(mutation => {\n        const {target, addedNodes, removedNodes} = mutation;\n        const added = addedNodes.length ? addedNodes[0].classList : null;\n        const removed = removedNodes.length ? removedNodes[0].classList : null;\n        const hasChange = (\n          target.classList.contains('list-card-title')\n          || added && added.contains('list-card')\n          || removed && removed.contains('list-card')\n        );\n        if (hasChange) {\n          this.refresh();\n          return false;\n        }\n        return true;\n      });\n    });\n  }\n\n  /**\n   * Start Observe Trello and attach TimeSummary labels\n   */\n  start() {\n    this.refresh();\n    this.observer.observe(this.target, {childList: true, subtree: true});\n  }\n\n  /**\n   * Refresh all TimeSummary labels\n   */\n  refresh() {\n    const renderItems = this.getTimeSummaries();\n    this.renderer.render(renderItems);\n  }\n\n  /**\n   * Return TimeSummary and DOMNode per Trello List\n   *\n   * @return {{node: DOMNode, props: {timeSummary: TimeSummary}}}\n   */\n  getTimeSummaries() {\n    const listNodes = this.target.querySelectorAll('.list-wrapper > .list');\n    return Array.prototype.map.call(listNodes, listNode => {\n      const titleNodes = listNode.querySelectorAll('.list-card-title');\n      const times = Array.prototype.map.call(titleNodes, title => {\n        if (title.offsetParent) {\n          return createTime(title.text);\n        }\n        return null;\n      }).filter(t => t);\n      const timeSummary = summarizer(times);\n      return {\n        node: listNode.querySelector('.list-header'),\n        props: {timeSummary}\n      };\n    });\n  }\n}\n"
+    "content": "import summarizer from '5rolli-time-summarizer';\nimport TimeSummaryLabel from './components/TimeSummaryLabel';\nimport Renderer from './lib/Renderer';\nimport {createTime} from './helpers';\n\nconst REFRESH_DURATION = 200;\n\n/**\n * @typedef {Object} TimeSummary\n *\n * @property {number} es estimated minutes\n * @property {number} es50 50% estimated minutes\n * @property {number} es90 90% estimated minutes\n * @property {number} spent spent minutes\n */\n\n\n/**\n * Managemnet TimeSummary on Trello Web Site\n */\nexport default class TimeSummaryManager {\n  /**\n   * Constructor\n   *\n   * @param {DOMNode} targetDOM target DOM for observing\n   */\n  constructor(targetDOM) {\n    this.target = targetDOM;\n    this.refreshTimeoutId = null;\n    this.renderer = new Renderer(TimeSummaryLabel);\n    this.observer = new MutationObserver(mutations => {\n      mutations.every(mutation => {\n        const {target, addedNodes, removedNodes} = mutation;\n        const added = addedNodes.length ? addedNodes[0].classList : null;\n        const removed = removedNodes.length ? removedNodes[0].classList : null;\n        const hasChange = (\n          target.classList.contains('list-card-title')\n          || target.classList.contains('list-card')\n          || added && added.contains('list-card')\n          || removed && removed.contains('list-card')\n        );\n        if (hasChange) {\n          this.refresh();\n          return false;\n        }\n        return true;\n      });\n    });\n  }\n\n  /**\n   * Start Observe Trello and attach TimeSummary labels\n   */\n  start() {\n    this.refresh();\n    this.observer.observe(this.target, {\n      childList: true,\n      subtree: true,\n      attributes: true,\n      attributeFilter: ['class']\n    });\n  }\n\n  /**\n   * Refresh all TimeSummary labels\n   */\n  refresh() {\n    /// FIXME: Maybe creating ListManager and BoardManager is better than this...\n    if (this.refreshTimeoutId) {\n      this.refreshTimeoutId = null;\n      this.refresh();\n    } else {\n      this.refreshTimeoutId = setTimeout(() => {\n        const renderItems = this.getTimeSummaries();\n        this.renderer.render(renderItems);\n        this.refreshTimeoutId = null;\n      }, REFRESH_DURATION);\n    }\n  }\n\n  /**\n   * Return TimeSummary and DOMNode per Trello List\n   *\n   * @return {{node: DOMNode, props: {timeSummary: TimeSummary}}}\n   */\n  getTimeSummaries() {\n    const listNodes = this.target.querySelectorAll('.list-wrapper > .list');\n    return Array.prototype.map.call(listNodes, listNode => {\n      // Exclude invisible list\n      if (listNode.offsetParent === null) {\n        return null;\n      }\n      const titleNodes = listNode.querySelectorAll('.list-card-title');\n      const times = Array.prototype.map.call(titleNodes, title => {\n        // Exclude invisible title\n        if (title.offsetParent) {\n          return createTime(title.text);\n        }\n        return null;\n      }).filter(t => t);\n      const timeSummary = summarizer(times);\n      return {\n        node: listNode.querySelector('.list-header'),\n        props: {timeSummary}\n      };\n    }).filter(t => t);\n  }\n}\n"
   },
   {
     "__docId__": 1,
+    "kind": "variable",
+    "static": true,
+    "variation": null,
+    "name": "REFRESH_DURATION",
+    "memberof": "src/content/TimeSummaryManager.js",
+    "longname": "src/content/TimeSummaryManager.js~REFRESH_DURATION",
+    "access": null,
+    "export": false,
+    "importPath": "5rolli-crx/src/content/TimeSummaryManager.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 6,
+    "undocument": true,
+    "type": {
+      "types": [
+        "number"
+      ]
+    }
+  },
+  {
+    "__docId__": 2,
     "kind": "typedef",
     "static": true,
     "variation": null,
@@ -73,7 +94,7 @@
     }
   },
   {
-    "__docId__": 2,
+    "__docId__": 3,
     "kind": "class",
     "static": true,
     "variation": null,
@@ -85,11 +106,11 @@
     "importPath": "5rolli-crx/src/content/TimeSummaryManager.js",
     "importStyle": "TimeSummaryManager",
     "description": "Managemnet TimeSummary on Trello Web Site",
-    "lineNumber": 19,
+    "lineNumber": 21,
     "interface": false
   },
   {
-    "__docId__": 3,
+    "__docId__": 4,
     "kind": "constructor",
     "static": false,
     "variation": null,
@@ -98,7 +119,7 @@
     "longname": "src/content/TimeSummaryManager.js~TimeSummaryManager#constructor",
     "access": null,
     "description": "Constructor",
-    "lineNumber": 25,
+    "lineNumber": 27,
     "params": [
       {
         "nullable": null,
@@ -114,7 +135,7 @@
     "generator": false
   },
   {
-    "__docId__": 4,
+    "__docId__": 5,
     "kind": "member",
     "static": false,
     "variation": null,
@@ -123,25 +144,7 @@
     "longname": "src/content/TimeSummaryManager.js~TimeSummaryManager#target",
     "access": null,
     "description": null,
-    "lineNumber": 26,
-    "undocument": true,
-    "type": {
-      "types": [
-        "*"
-      ]
-    }
-  },
-  {
-    "__docId__": 5,
-    "kind": "member",
-    "static": false,
-    "variation": null,
-    "name": "renderer",
-    "memberof": "src/content/TimeSummaryManager.js~TimeSummaryManager",
-    "longname": "src/content/TimeSummaryManager.js~TimeSummaryManager#renderer",
-    "access": null,
-    "description": null,
-    "lineNumber": 27,
+    "lineNumber": 28,
     "undocument": true,
     "type": {
       "types": [
@@ -154,12 +157,12 @@
     "kind": "member",
     "static": false,
     "variation": null,
-    "name": "observer",
+    "name": "refreshTimeoutId",
     "memberof": "src/content/TimeSummaryManager.js~TimeSummaryManager",
-    "longname": "src/content/TimeSummaryManager.js~TimeSummaryManager#observer",
+    "longname": "src/content/TimeSummaryManager.js~TimeSummaryManager#refreshTimeoutId",
     "access": null,
     "description": null,
-    "lineNumber": 28,
+    "lineNumber": 29,
     "undocument": true,
     "type": {
       "types": [
@@ -169,6 +172,42 @@
   },
   {
     "__docId__": 7,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "renderer",
+    "memberof": "src/content/TimeSummaryManager.js~TimeSummaryManager",
+    "longname": "src/content/TimeSummaryManager.js~TimeSummaryManager#renderer",
+    "access": null,
+    "description": null,
+    "lineNumber": 30,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 8,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "observer",
+    "memberof": "src/content/TimeSummaryManager.js~TimeSummaryManager",
+    "longname": "src/content/TimeSummaryManager.js~TimeSummaryManager#observer",
+    "access": null,
+    "description": null,
+    "lineNumber": 31,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 9,
     "kind": "method",
     "static": false,
     "variation": null,
@@ -177,12 +216,12 @@
     "longname": "src/content/TimeSummaryManager.js~TimeSummaryManager#start",
     "access": null,
     "description": "Start Observe Trello and attach TimeSummary labels",
-    "lineNumber": 50,
+    "lineNumber": 54,
     "params": [],
     "generator": false
   },
   {
-    "__docId__": 8,
+    "__docId__": 10,
     "kind": "method",
     "static": false,
     "variation": null,
@@ -191,12 +230,66 @@
     "longname": "src/content/TimeSummaryManager.js~TimeSummaryManager#refresh",
     "access": null,
     "description": "Refresh all TimeSummary labels",
-    "lineNumber": 58,
+    "lineNumber": 67,
     "params": [],
     "generator": false
   },
   {
-    "__docId__": 9,
+    "__docId__": 11,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "refreshTimeoutId",
+    "memberof": "src/content/TimeSummaryManager.js~TimeSummaryManager",
+    "longname": "src/content/TimeSummaryManager.js~TimeSummaryManager#refreshTimeoutId",
+    "access": null,
+    "description": null,
+    "lineNumber": 70,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 12,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "refreshTimeoutId",
+    "memberof": "src/content/TimeSummaryManager.js~TimeSummaryManager",
+    "longname": "src/content/TimeSummaryManager.js~TimeSummaryManager#refreshTimeoutId",
+    "access": null,
+    "description": null,
+    "lineNumber": 73,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 13,
+    "kind": "member",
+    "static": false,
+    "variation": null,
+    "name": "refreshTimeoutId",
+    "memberof": "src/content/TimeSummaryManager.js~TimeSummaryManager",
+    "longname": "src/content/TimeSummaryManager.js~TimeSummaryManager#refreshTimeoutId",
+    "access": null,
+    "description": null,
+    "lineNumber": 76,
+    "undocument": true,
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 14,
     "kind": "method",
     "static": false,
     "variation": null,
@@ -205,7 +298,7 @@
     "longname": "src/content/TimeSummaryManager.js~TimeSummaryManager#getTimeSummaries",
     "access": null,
     "description": "Return TimeSummary and DOMNode per Trello List",
-    "lineNumber": 68,
+    "lineNumber": 86,
     "params": [],
     "return": {
       "nullable": null,
@@ -218,7 +311,7 @@
     "generator": false
   },
   {
-    "__docId__": 10,
+    "__docId__": 15,
     "kind": "file",
     "static": true,
     "variation": null,
@@ -231,7 +324,7 @@
     "content": "import h from 'virtual-dom/h';\nimport nbem from 'nbem';\n\n\n/**\n * Estimate Label Node\n *\n * @param {TimeSummary} timeSummary timeSummary object\n * @param {Function} bem nbem factory function\n * @return {Element[]}\n */\nfunction estimateLabel(timeSummary, bem) {\n  return ['es', null, 'es50', null, 'es90'].map(key => {\n    const className = key ? '' : `${bem('&&separator')}`;\n    const val = key ? timeSummary[key] || 0 : ' | ';\n    return h('span', {className}, val);\n  });\n}\n\n\n/**\n * TimeSummaryLabel Component\n *\n * @param {{timeSummary: TimeSummary}} state state\n * @return {Element}\n */\nexport default function TimeSummaryLabel(state) {\n  const {timeSummary} = state;\n  const bem = nbem();\n  return h(`.${bem('crx5rolli-timeSummaryLabel')}`, [\n    h(`.${bem('&&spent')}`, [\n      timeSummary.spent\n    ]),\n    h(`.${bem('&&es')}`, estimateLabel(timeSummary, bem))\n  ]);\n}\n"
   },
   {
-    "__docId__": 11,
+    "__docId__": 16,
     "kind": "function",
     "static": true,
     "variation": null,
@@ -277,7 +370,7 @@
     "generator": false
   },
   {
-    "__docId__": 12,
+    "__docId__": 17,
     "kind": "function",
     "static": true,
     "variation": null,
@@ -313,7 +406,7 @@
     "generator": false
   },
   {
-    "__docId__": 13,
+    "__docId__": 18,
     "kind": "file",
     "static": true,
     "variation": null,
@@ -326,7 +419,7 @@
     "content": "/**\n * Create time object from title text\n *\n * @param {string} title title text\n * @return {{spent: number, es50: number, es90: number}}\n */\nexport function createTime(title) {\n  const matches = /\\((?:(\\d+)\\/)?(\\d+)\\/(\\d+)\\)/.exec(title);\n  if (!matches) {\n    return {spent: 0, es50: 0, es90: 0};\n  }\n  const [spent, es50, es90] = matches.slice(1).map(s => {\n    return s ? parseInt(s, 10) : 0;\n  });\n  return {spent, es50, es90};\n}\n"
   },
   {
-    "__docId__": 14,
+    "__docId__": 19,
     "kind": "function",
     "static": true,
     "variation": null,
@@ -362,7 +455,7 @@
     "generator": false
   },
   {
-    "__docId__": 15,
+    "__docId__": 20,
     "kind": "file",
     "static": true,
     "variation": null,
@@ -375,7 +468,7 @@
     "content": "import TimeSummaryManager from './TimeSummaryManager';\n\n/**\n * Initialize\n */\n(() => {\n  const manager = new TimeSummaryManager(document.body);\n  manager.start();\n})();\n"
   },
   {
-    "__docId__": 16,
+    "__docId__": 21,
     "kind": "file",
     "static": true,
     "variation": null,
@@ -388,7 +481,7 @@
     "content": "import mainLoop from 'main-loop';\nimport vdom from 'virtual-dom';\n\n/**\n * @typedef {Object} RenderItem\n *\n * @property {DOMNode} node target DOMNode\n * @property {props} props props\n */\n\n\n/**\n * Render\n */\nexport default class Renderer {\n\n  /**\n   * Constructor\n   *\n   * @param {Function} component virtual-dom Component Function\n   */\n  constructor(component) {\n    this.nodes = [];\n    this.component = component;\n  }\n\n  /**\n   * Create virtual-dom tree and attach DOMNode\n   *\n   * @param {RenderItem} item item object\n   * @return {{node: DOMNode, tree: Object}}\n   */\n  createTreeAndAttachDOM(item) {\n    const tree = mainLoop(item.props, this.component, vdom);\n    item.node.appendChild(tree.target);\n    return {\n      tree,\n      parent: item.node\n    };\n  }\n\n  /**\n   * render\n   *\n   * @param {RenderItem[]} newItems render item list\n   */\n  render(newItems) {\n    const oldNodes = this.nodes;\n    const added = newItems.filter(ni => {\n      return !(oldNodes.find(on => on.parent === ni.node));\n    }).map(ni => this.createTreeAndAttachDOM(ni));\n    const updated = oldNodes.map(on => {\n      const updateItem = newItems.find(ni => ni.node === on.parent);\n      if (!updateItem) {\n        return null;\n      }\n      on.tree.update(updateItem.props);\n      return on;\n    }).filter(on => on);\n    this.nodes = updated.concat(added);\n  }\n}\n"
   },
   {
-    "__docId__": 17,
+    "__docId__": 22,
     "kind": "typedef",
     "static": true,
     "variation": null,
@@ -428,7 +521,7 @@
     }
   },
   {
-    "__docId__": 18,
+    "__docId__": 23,
     "kind": "class",
     "static": true,
     "variation": null,
@@ -444,7 +537,7 @@
     "interface": false
   },
   {
-    "__docId__": 19,
+    "__docId__": 24,
     "kind": "constructor",
     "static": false,
     "variation": null,
@@ -469,7 +562,7 @@
     "generator": false
   },
   {
-    "__docId__": 20,
+    "__docId__": 25,
     "kind": "member",
     "static": false,
     "variation": null,
@@ -487,7 +580,7 @@
     }
   },
   {
-    "__docId__": 21,
+    "__docId__": 26,
     "kind": "member",
     "static": false,
     "variation": null,
@@ -505,7 +598,7 @@
     }
   },
   {
-    "__docId__": 22,
+    "__docId__": 27,
     "kind": "method",
     "static": false,
     "variation": null,
@@ -538,7 +631,7 @@
     "generator": false
   },
   {
-    "__docId__": 23,
+    "__docId__": 28,
     "kind": "method",
     "static": false,
     "variation": null,
@@ -563,7 +656,7 @@
     "generator": false
   },
   {
-    "__docId__": 24,
+    "__docId__": 29,
     "kind": "member",
     "static": false,
     "variation": null,
@@ -581,7 +674,7 @@
     }
   },
   {
-    "__docId__": 26,
+    "__docId__": 31,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -594,7 +687,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 27,
+    "__docId__": 32,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -607,7 +700,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 28,
+    "__docId__": 33,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -620,7 +713,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 29,
+    "__docId__": 34,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -633,7 +726,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 30,
+    "__docId__": 35,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -646,7 +739,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 31,
+    "__docId__": 36,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -659,7 +752,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 32,
+    "__docId__": 37,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -672,7 +765,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 33,
+    "__docId__": 38,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -685,7 +778,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 34,
+    "__docId__": 39,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -698,7 +791,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 35,
+    "__docId__": 40,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -711,7 +804,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 36,
+    "__docId__": 41,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -724,7 +817,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 37,
+    "__docId__": 42,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -737,7 +830,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 38,
+    "__docId__": 43,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -750,7 +843,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 39,
+    "__docId__": 44,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -763,7 +856,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 40,
+    "__docId__": 45,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -776,7 +869,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 41,
+    "__docId__": 46,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -789,7 +882,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 42,
+    "__docId__": 47,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -802,7 +895,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 43,
+    "__docId__": 48,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -815,7 +908,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 44,
+    "__docId__": 49,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -828,7 +921,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 45,
+    "__docId__": 50,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -841,7 +934,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 46,
+    "__docId__": 51,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -854,7 +947,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 47,
+    "__docId__": 52,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -867,7 +960,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 48,
+    "__docId__": 53,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -880,7 +973,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 49,
+    "__docId__": 54,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -893,7 +986,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 50,
+    "__docId__": 55,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -906,7 +999,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 51,
+    "__docId__": 56,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -919,7 +1012,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 52,
+    "__docId__": 57,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -932,7 +1025,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 53,
+    "__docId__": 58,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -945,7 +1038,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 54,
+    "__docId__": 59,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -958,7 +1051,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 55,
+    "__docId__": 60,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -971,7 +1064,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 56,
+    "__docId__": 61,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -984,7 +1077,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 57,
+    "__docId__": 62,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -997,7 +1090,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 58,
+    "__docId__": 63,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1010,7 +1103,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 59,
+    "__docId__": 64,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1023,7 +1116,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 60,
+    "__docId__": 65,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1036,7 +1129,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 61,
+    "__docId__": 66,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1049,7 +1142,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 62,
+    "__docId__": 67,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1062,7 +1155,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 63,
+    "__docId__": 68,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1075,7 +1168,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 64,
+    "__docId__": 69,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1088,7 +1181,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 65,
+    "__docId__": 70,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1101,7 +1194,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 66,
+    "__docId__": 71,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1114,7 +1207,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 67,
+    "__docId__": 72,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1127,7 +1220,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 68,
+    "__docId__": 73,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1140,7 +1233,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 69,
+    "__docId__": 74,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1153,7 +1246,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 70,
+    "__docId__": 75,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1166,7 +1259,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 71,
+    "__docId__": 76,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1179,7 +1272,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 72,
+    "__docId__": 77,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1192,7 +1285,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 74,
+    "__docId__": 79,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1205,7 +1298,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 75,
+    "__docId__": 80,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1218,7 +1311,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 76,
+    "__docId__": 81,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1231,7 +1324,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 77,
+    "__docId__": 82,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1244,7 +1337,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 78,
+    "__docId__": 83,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1257,7 +1350,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 79,
+    "__docId__": 84,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1270,7 +1363,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 80,
+    "__docId__": 85,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1283,7 +1376,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 81,
+    "__docId__": 86,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -1296,7 +1389,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 82,
+    "__docId__": 87,
     "kind": "testFile",
     "static": true,
     "variation": null,
@@ -1309,7 +1402,7 @@
     "content": "import assert from 'power-assert';\nimport jsdom from 'jsdom';\n/* eslint-disable */\nconst document = jsdom.jsdom('hello');\nconst window = document.defaultWindow;\n/* eslint-enable */\n\ndescribe('TimeSummaryManager', () => {\n  let TimeSummaryManager = null;\n  beforeEach(() => {\n    TimeSummaryManager = require('../../src/content/TimeSummaryManager').default;\n  });\n  it('is defined', () => {\n    assert(TimeSummaryManager);\n  });\n});\n"
   },
   {
-    "__docId__": 83,
+    "__docId__": 88,
     "kind": "testDescribe",
     "static": true,
     "variation": null,
@@ -1323,7 +1416,7 @@
     "lineNumber": 8
   },
   {
-    "__docId__": 84,
+    "__docId__": 89,
     "kind": "testIt",
     "static": true,
     "variation": null,

@@ -1,6 +1,6 @@
 {
-  "coverage": "68.75%",
-  "expectCount": 16,
+  "coverage": "64.7%",
+  "expectCount": 17,
   "actualCount": 11,
   "files": {
     "src/content/lib/Renderer.js": {
@@ -17,12 +17,13 @@
       "undocumentLines": []
     },
     "src/content/TimeSummaryManager.js": {
-      "expectCount": 8,
+      "expectCount": 9,
       "actualCount": 5,
       "undocumentLines": [
-        28,
-        27,
-        26
+        31,
+        29,
+        30,
+        28
       ]
     },
     "src/content/helpers.js": {

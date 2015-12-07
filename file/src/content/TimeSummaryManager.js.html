@@ -48,6 +48,8 @@ import TimeSummaryLabel from &apos;./components/TimeSummaryLabel&apos;;
 import Renderer from &apos;./lib/Renderer&apos;;
 import {createTime} from &apos;./helpers&apos;;
 
+const REFRESH_DURATION = 200;
+
 /**
  * @typedef {Object} TimeSummary
  *
@@ -69,6 +71,7 @@ export default class TimeSummaryManager {
    */
   constructor(targetDOM) {
     this.target = targetDOM;
+    this.refreshTimeoutId = null;
     this.renderer = new Renderer(TimeSummaryLabel);
     this.observer = new MutationObserver(mutations =&gt; {
       mutations.every(mutation =&gt; {
@@ -77,6 +80,7 @@ export default class TimeSummaryManager {
         const removed = removedNodes.length ? removedNodes[0].classList : null;
         const hasChange = (
           target.classList.contains(&apos;list-card-title&apos;)
+          || target.classList.contains(&apos;list-card&apos;)
           || added &amp;&amp; added.contains(&apos;list-card&apos;)
           || removed &amp;&amp; removed.contains(&apos;list-card&apos;)
         );
@@ -94,15 +98,29 @@ export default class TimeSummaryManager {
    */
   start() {
     this.refresh();
-    this.observer.observe(this.target, {childList: true, subtree: true});
+    this.observer.observe(this.target, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: [&apos;class&apos;]
+    });
   }
 
   /**
    * Refresh all TimeSummary labels
    */
   refresh() {
-    const renderItems = this.getTimeSummaries();
-    this.renderer.render(renderItems);
+    /// FIXME: Maybe creating ListManager and BoardManager is better than this...
+    if (this.refreshTimeoutId) {
+      this.refreshTimeoutId = null;
+      this.refresh();
+    } else {
+      this.refreshTimeoutId = setTimeout(() =&gt; {
+        const renderItems = this.getTimeSummaries();
+        this.renderer.render(renderItems);
+        this.refreshTimeoutId = null;
+      }, REFRESH_DURATION);
+    }
   }
 
   /**
@@ -113,8 +131,13 @@ export default class TimeSummaryManager {
   getTimeSummaries() {
     const listNodes = this.target.querySelectorAll(&apos;.list-wrapper &gt; .list&apos;);
     return Array.prototype.map.call(listNodes, listNode =&gt; {
+      // Exclude invisible list
+      if (listNode.offsetParent === null) {
+        return null;
+      }
       const titleNodes = listNode.querySelectorAll(&apos;.list-card-title&apos;);
       const times = Array.prototype.map.call(titleNodes, title =&gt; {
+        // Exclude invisible title
         if (title.offsetParent) {
           return createTime(title.text);
         }
@@ -125,7 +148,7 @@ export default class TimeSummaryManager {
         node: listNode.querySelector(&apos;.list-header&apos;),
         props: {timeSummary}
       };
-    });
+    }).filter(t =&gt; t);
   }
 }
 </code></pre>

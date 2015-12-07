@@ -402,6 +402,12 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "src/content/timesummarymanager.js~timesummarymanager#refreshtimeoutid",
+    "class/src/content/TimeSummaryManager.js~TimeSummaryManager.html#instance-member-refreshTimeoutId",
+    "src/content/TimeSummaryManager.js~TimeSummaryManager#refreshTimeoutId",
+    "member"
+  ],
+  [
     "src/content/timesummarymanager.js~timesummarymanager#renderer",
     "class/src/content/TimeSummaryManager.js~TimeSummaryManager.html#instance-member-renderer",
     "src/content/TimeSummaryManager.js~TimeSummaryManager#renderer",

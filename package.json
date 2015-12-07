@@ -1,7 +1,7 @@
 {
   "name": "5rolli-crx",
   "description": "Chrome Extension for 5ROLLI",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "moqada <moqada@gmail.com>",
   "bugs": {
     "url": "https://github.com/moqada/5rolli-crx/issues"
@@ -27,7 +27,7 @@
     "esdoc": "^0.4.3",
     "eslint": "^1.10.3",
     "eslint-config-moqada": "^9.0.0",
-    "gh-pages": "^0.6.0",
+    "gh-pages": "^0.7.0",
     "isparta": "^4.0.0",
     "jsdom": "^7.1.1",
     "mocha": "^2.3.4",
@@ -36,13 +36,9 @@
     "stylus": "^0.52.4",
     "watchify": "^3.6.1"
   },
-  "files": [
-    "lib"
-  ],
   "homepage": "https://github.com/moqada/5rolli-crx#readme",
-  "keywords": [],
   "license": "MIT",
-  "main": "lib/index.js",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/moqada/5rolli-crx.git"
@@ -52,22 +48,22 @@
     "build:copy": "cpx 'src/**/*.{json,png}' app/",
     "build:css-content": "stylus src/styles/content.styl -o app/styles/content.css",
     "build:js-content": "browserify -t babelify src/content/index.js -o app/content.js",
-    "pack": "crx pack app -o build/5rolli.crx -p key.pem",
     "codecov": "cat coverage/lcov.info | codecov",
     "deploy": "npm-run-all doc gh-pages",
     "doc": "esdoc -c esdoc.json",
     "gh-pages": "gh-pages -d doc",
     "lint": "eslint --cache {src,test}",
+    "pack": "crx pack app -o build/5rolli.crx -p key.pem",
     "postrelease": "npm run deploy",
     "prebuild": "rm -rf app && mkdir -p app/styles",
     "predoc": "rm -rf doc",
+    "prepack": "rm -rf build && mkdir -p build",
     "prerelease": "git diff --exit-code && npm run --if-present build",
     "pretest": "rm -rf coverage",
     "prewatch": "mkdir -p app/styles",
-    "prepack": "rm -rf build && mkdir -p build",
+    "release": "ghr",
     "test": "npm-run-all lint test:coverage",
     "test:coverage": "babel-node $(npm bin)/isparta cover --report text --report html --report lcovonly _mocha -- test/**/*spec.js",
-    "release": "ghr",
     "watch": "npm-run-all --parallel watch:*",
     "watch:copy": "cpx --watch 'src/**/*.{json,png}' app/",
     "watch:css-content": "stylus -w src/styles/content.styl -o app/styles/content.css",

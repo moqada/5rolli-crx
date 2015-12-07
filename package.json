@@ -1,7 +1,7 @@
 {
   "name": "5rolli-crx",
   "description": "Chrome Extension for 5ROLLI",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "moqada <moqada@gmail.com>",
   "bugs": {
     "url": "https://github.com/moqada/5rolli-crx/issues"

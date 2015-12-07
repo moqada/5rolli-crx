@@ -24,6 +24,7 @@ export default class TimeSummaryManager {
    */
   constructor(targetDOM) {
     this.target = targetDOM;
+    this.refreshTimeoutId = null;
     this.renderer = new Renderer(TimeSummaryLabel);
     this.observer = new MutationObserver(mutations => {
       mutations.every(mutation => {
@@ -32,6 +33,7 @@ export default class TimeSummaryManager {
         const removed = removedNodes.length ? removedNodes[0].classList : null;
         const hasChange = (
           target.classList.contains('list-card-title')
+          || target.classList.contains('list-card')
           || added && added.contains('list-card')
           || removed && removed.contains('list-card')
         );
@@ -49,15 +51,29 @@ export default class TimeSummaryManager {
    */
   start() {
     this.refresh();
-    this.observer.observe(this.target, {childList: true, subtree: true});
+    this.observer.observe(this.target, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class']
+    });
   }
 
   /**
    * Refresh all TimeSummary labels
    */
   refresh() {
-    const renderItems = this.getTimeSummaries();
-    this.renderer.render(renderItems);
+    /// FIXME: Maybe creating ListManager and BoardManager is better than this...
+    if (this.refreshTimeoutId) {
+      this.refreshTimeoutId = null;
+      this.refresh();
+    } else {
+      this.refreshTimeoutId = setTimeout(() => {
+        const renderItems = this.getTimeSummaries();
+        this.renderer.render(renderItems);
+        this.refreshTimeoutId = null;
+      }, 200);
+    }
   }
 
   /**
@@ -68,8 +84,13 @@ export default class TimeSummaryManager {
   getTimeSummaries() {
     const listNodes = this.target.querySelectorAll('.list-wrapper > .list');
     return Array.prototype.map.call(listNodes, listNode => {
+      // Exclude invisible list
+      if (listNode.offsetParent === null) {
+        return null;
+      }
       const titleNodes = listNode.querySelectorAll('.list-card-title');
       const times = Array.prototype.map.call(titleNodes, title => {
+        // Exclude invisible title
         if (title.offsetParent) {
           return createTime(title.text);
         }
@@ -80,6 +101,6 @@ export default class TimeSummaryManager {
         node: listNode.querySelector('.list-header'),
         props: {timeSummary}
       };
-    });
+    }).filter(t => t);
   }
 }

@@ -9,7 +9,7 @@
   "dependencies": {
     "5rolli-time-summarizer": "^0.1.0",
     "main-loop": "^3.2.0",
-    "nbem": "^0.2.0",
+    "nbem": "^0.3.0",
     "virtual-dom": "^2.1.1",
     "virtual-element": "^1.2.0"
   },

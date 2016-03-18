@@ -81,7 +81,7 @@ export default class TimeSummaryManager {
   /**
    * Return TimeSummary and DOMNode per Trello List
    *
-   * @return {{node: DOMNode, props: {timeSummary: TimeSummary}}}
+   * @return {{node: DOMNode, props: Object}}}
    */
   getTimeSummaries() {
     const listNodes = this.target.querySelectorAll('.list-wrapper > .list');
